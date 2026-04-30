@@ -9,7 +9,10 @@ import java.util.List;
 
 // This class handles API requests from the frontend
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://premier-united-frontend.vercel.app"
+})
 @RequestMapping(path = "api/v1/player")
 public class PlayerController {
 
