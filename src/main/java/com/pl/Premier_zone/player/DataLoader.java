@@ -19,18 +19,15 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        // Only load the CSV if the database is empty
-        if (playerRepository.count() > 0) {
-            return;
-        }
+        // Reload the real CSV data
+        playerRepository.deleteAll();
 
         ClassPathResource resource = new ClassPathResource("prem_stats.csv");
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(resource.getInputStream()))) {
 
-            // Skip header row
-            reader.readLine();
+            reader.readLine(); // skip header
 
             String line;
 
@@ -62,6 +59,8 @@ public class DataLoader implements CommandLineRunner {
                 playerRepository.save(player);
             }
         }
+
+        System.out.println("Real player CSV data loaded.");
     }
 
     private Integer parseInteger(String value) {
