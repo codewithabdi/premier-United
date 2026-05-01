@@ -10,70 +10,90 @@ import java.io.InputStreamReader;
 @Component
 public class DataLoader implements CommandLineRunner {
 
-    private final PlayerRepository playerRepository;
+    private final PlayerRepository repo;
 
-    public DataLoader(PlayerRepository playerRepository) {
-        this.playerRepository = playerRepository;
+    public DataLoader(PlayerRepository repo) {
+        this.repo = repo;
     }
 
     @Override
     public void run(String... args) throws Exception {
 
-        // Reload the real CSV data
-        playerRepository.deleteAll();
+        // prevent reloading if already loaded
+        if (repo.count() > 0) {
+            System.out.println("Data already loaded");
+            return;
+        }
 
         ClassPathResource resource = new ClassPathResource("prem_stats.csv");
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(resource.getInputStream()))) {
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(resource.getInputStream())
+        );
 
-            reader.readLine(); // skip header
+        reader.readLine(); // skip header
 
-            String line;
+        String line;
 
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",", -1);
+        while ((line = reader.readLine()) != null) {
 
-                if (data.length < 15) {
-                    continue;
+            try {
+                // 🔥 FIX: handles commas inside quotes
+                String[] d = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+                // 🔥 clean quotes and spaces
+                for (int i = 0; i < d.length; i++) {
+                    d[i] = d[i].replace("\"", "").trim();
                 }
 
-                Player player = new Player(
-                        data[0].trim(),
-                        data[1].trim(),
-                        data[2].trim(),
-                        parseInteger(data[3]),
-                        parseInteger(data[4]),
-                        parseInteger(data[5]),
-                        parseDouble(data[6]),
-                        parseDouble(data[7]),
-                        parseDouble(data[8]),
-                        parseDouble(data[9]),
-                        parseDouble(data[10]),
-                        parseDouble(data[11]),
-                        parseDouble(data[12]),
-                        parseDouble(data[13]),
-                        data[14].trim()
+                // skip bad rows
+                if (d.length < 15) continue;
+
+                Player p = new Player(
+                        d[0],  // name
+                        d[1],  // nation
+                        d[2],  // pos
+                        parseInteger(d[3]),
+                        parseInteger(d[4]),
+                        parseInteger(d[5]),
+                        parseDouble(d[6]),
+                        parseDouble(d[7]),
+                        parseDouble(d[8]),
+                        parseDouble(d[9]),
+                        parseDouble(d[10]),
+                        parseDouble(d[11]),
+                        parseDouble(d[12]),
+                        parseDouble(d[13]),
+                        d[14]   // team
                 );
 
-                playerRepository.save(player);
+                repo.save(p);
+
+            } catch (Exception e) {
+                // 🔥 skip broken rows instead of crashing
+                System.out.println("Skipped row: " + line);
             }
         }
 
-        System.out.println("Real player CSV data loaded.");
+        reader.close();
+
+        System.out.println("✅ CSV LOADED SUCCESSFULLY");
     }
 
+    // 🔥 SAFE parsing (no crashes)
     private Integer parseInteger(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
             return 0;
         }
-        return Integer.parseInt(value.trim());
     }
 
     private Double parseDouble(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception e) {
             return 0.0;
         }
-        return Double.parseDouble(value.trim());
     }
 }

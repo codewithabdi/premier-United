@@ -1,29 +1,19 @@
 package com.pl.Premier_zone.player;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
-// This class handles API requests from the frontend
 @RestController
-@CrossOrigin(origins = {
-        "http://localhost:5173",
-        "https://premier-united-frontend.vercel.app"
-})
-@RequestMapping(path = "api/v1/player")
+@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/api/v1/player")
 public class PlayerController {
 
-    private final PlayerService playerService;
+    private final PlayerService service;
 
-    @Autowired
-    public PlayerController(PlayerService playerService) {
-        this.playerService = playerService;
+    public PlayerController(PlayerService service) {
+        this.service = service;
     }
 
-    // Get players based on optional filters
     @GetMapping
     public List<Player> getPlayers(
             @RequestParam(required = false) String team,
@@ -31,44 +21,12 @@ public class PlayerController {
             @RequestParam(required = false) String position,
             @RequestParam(required = false) String nation) {
 
-        if (team != null && position != null) {
-            return playerService.getPlayersByTeamAndPosition(team, position);
-        } else if (team != null) {
-            return playerService.getPlayersFromTeam(team);
-        } else if (name != null) {
-            return playerService.getPlayersByName(name);
-        } else if (position != null) {
-            return playerService.getPlayersByPos(position);
-        } else if (nation != null) {
-            return playerService.getPlayersByNation(nation);
-        } else {
-            return playerService.getPlayers();
-        }
-    }
+        if (team != null && position != null) return service.getPlayersByTeamAndPosition(team, position);
+        if (team != null) return service.getPlayersFromTeam(team);
+        if (name != null) return service.getPlayersByName(name);
+        if (position != null) return service.getPlayersByPos(position);
+        if (nation != null) return service.getPlayersByNation(nation);
 
-    // Add a new player
-    @PostMapping
-    public ResponseEntity<Player> addPlayer(@RequestBody Player player) {
-        Player createdPlayer = playerService.addPlayer(player);
-        return new ResponseEntity<>(createdPlayer, HttpStatus.CREATED);
-    }
-
-    // Update an existing player
-    @PutMapping
-    public ResponseEntity<Player> updatePlayer(@RequestBody Player player) {
-        Player resultPlayer = playerService.updatePlayer(player);
-
-        if (resultPlayer != null) {
-            return new ResponseEntity<>(resultPlayer, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    // Delete a player by name
-    @DeleteMapping("/{playerName}")
-    public ResponseEntity<String> deletePlayer(@PathVariable String playerName) {
-        playerService.deletePlayer(playerName);
-        return new ResponseEntity<>("Player deleted successfully", HttpStatus.OK);
+        return service.getPlayers();
     }
 }
