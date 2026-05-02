@@ -1,17 +1,18 @@
 package com.pl.Premier_zone.player;
 
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/v1/player")
 public class PlayerController {
 
-    private final PlayerService service;
+    private final PlayerService playerService;
 
-    public PlayerController(PlayerService service) {
-        this.service = service;
+    public PlayerController(PlayerService playerService) {
+        this.playerService = playerService;
     }
 
     @GetMapping
@@ -21,12 +22,18 @@ public class PlayerController {
             @RequestParam(required = false) String position,
             @RequestParam(required = false) String nation) {
 
-        if (team != null && position != null) return service.getPlayersByTeamAndPosition(team, position);
-        if (team != null) return service.getPlayersFromTeam(team);
-        if (name != null) return service.getPlayersByName(name);
-        if (position != null) return service.getPlayersByPos(position);
-        if (nation != null) return service.getPlayersByNation(nation);
-
-        return service.getPlayers();
+        if (team != null && position != null) {
+            return playerService.getPlayersByTeamAndPosition(team, position);
+        } else if (team != null) {
+            return playerService.getPlayersFromTeam(team);
+        } else if (name != null) {
+            return playerService.getPlayersByName(name);
+        } else if (position != null) {
+            return playerService.getPlayersByPos(position);
+        } else if (nation != null) {
+            return playerService.getPlayersByNation(nation);
+        } else {
+            return playerService.getPlayers();
+        }
     }
 }
